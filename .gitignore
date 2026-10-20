@@ -1,0 +1,33 @@
+target/
+!.mvn/wrapper/maven-wrapper.jar
+!**/src/main/**/target/
+!**/src/test/**/target/
+
+### IntelliJ IDEA ###
+.idea/
+*.iws
+*.iml
+*.ipr
+
+### Eclipse ###
+.classpath
+.project
+.settings/
+bin/
+
+### VS Code ###
+.vscode/
+
+### 本地私有配置（含密码、密钥） ###
+src/main/resources/application-local.yml
+application-local.yml
+
+### 日志 / 临时文件 ###
+*.log
+logs/
+uploads/
+
+### 前端 ###
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/

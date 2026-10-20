@@ -6,10 +6,13 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.secondhand.entity.Goods;
 import com.secondhand.mapper.GoodsMapper;
 import com.secondhand.service.GoodsService;
+import com.secondhand.utils.CacheHelper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -21,14 +24,20 @@ public class GoodsServiceImpl implements GoodsService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private CacheHelper cacheHelper;
+
     private static final String GOODS_CACHE_PREFIX = "goods:hot:";
     private static final String GOODS_LIST_CACHE = "goods:list:";
 
     @Override
     public IPage<Goods> listGoods(Page<Goods> page, String keyword, Integer categoryId,
                                    BigDecimal minPrice, BigDecimal maxPrice) {
-        String cacheKey = GOODS_LIST_CACHE + keyword + ":" + categoryId + ":" + minPrice + ":" + maxPrice + ":" + page.getCurrent();
+        // 缓存 key 必须带上 size，否则换 pageSize 会读到错误的分页结果
+        String cacheKey = GOODS_LIST_CACHE + keyword + ":" + categoryId + ":" + minPrice + ":"
+                + maxPrice + ":" + page.getCurrent() + ":" + page.getSize();
 
+        @SuppressWarnings("unchecked")
         IPage<Goods> cachedPage = (IPage<Goods>) redisTemplate.opsForValue().get(cacheKey);
         if (cachedPage != null) {
             return cachedPage;
@@ -88,15 +97,15 @@ public class GoodsServiceImpl implements GoodsService {
 
     @Override
     public void updateGoods(Goods goods) {
+        // 延迟双删：更新前删一次，更新后再删一次
         redisTemplate.delete(GOODS_CACHE_PREFIX + goods.getId());
         goodsMapper.updateById(goods);
         redisTemplate.delete(GOODS_CACHE_PREFIX + goods.getId());
-        redisTemplate.delete(GOODS_LIST_CACHE + "*");
+        cacheHelper.evictByPrefix(GOODS_LIST_CACHE);
     }
 
     @Override
-    public void deleteGoods(Long goodsId, Long userId) {
-        Goods goods = goodsMapper.selectById(goodsId);
+    public void deleteGoods(Long goodsId, Long userId) {        Goods goods = goodsMapper.selectById(goodsId);
         if (goods == null) {
             throw new RuntimeException("商品不存在");
         }
@@ -106,6 +115,15 @@ public class GoodsServiceImpl implements GoodsService {
 
         goodsMapper.deleteById(goodsId);
         redisTemplate.delete(GOODS_CACHE_PREFIX + goodsId);
-        redisTemplate.delete(GOODS_LIST_CACHE + "*");
+        cacheHelper.evictByPrefix(GOODS_LIST_CACHE);
+    }
+
+    @Override
+    public List<Goods> listMyGoods(Long userId) {
+        return goodsMapper.selectList(
+                new QueryWrapper<Goods>()
+                        .eq("user_id", userId)
+                        .orderByDesc("create_time")
+        );
     }
 }
