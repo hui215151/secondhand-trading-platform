@@ -8,4 +8,5 @@ public interface FavoriteService {
     void addFavorite(Long userId, Long goodsId);
     void removeFavorite(Long userId, Long goodsId);
     IPage<Goods> listFavorites(Page<Goods> page, Long userId);
+    boolean isFavorite(Long userId, Long goodsId);
 }

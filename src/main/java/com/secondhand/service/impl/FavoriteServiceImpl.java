@@ -67,7 +67,7 @@ public class FavoriteServiceImpl implements FavoriteService {
         );
 
         if (favorites.isEmpty()) {
-            return new Page<>();
+            return new Page<>(page.getCurrent(), page.getSize());
         }
 
         List<Long> goodsIds = favorites.stream()
@@ -76,10 +76,20 @@ public class FavoriteServiceImpl implements FavoriteService {
 
         List<Goods> goodsList = goodsMapper.selectBatchIds(goodsIds);
 
-        Page<Goods> resultPage = new Page<>();
+        Page<Goods> resultPage = new Page<>(page.getCurrent(), page.getSize());
         resultPage.setRecords(goodsList);
         resultPage.setTotal(goodsList.size());
 
         return resultPage;
+    }
+
+    @Override
+    public boolean isFavorite(Long userId, Long goodsId) {
+        Long count = favoriteMapper.selectCount(
+                new QueryWrapper<Favorite>()
+                        .eq("user_id", userId)
+                        .eq("goods_id", goodsId)
+        );
+        return count != null && count > 0;
     }
 }

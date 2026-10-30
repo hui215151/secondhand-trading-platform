@@ -2,6 +2,7 @@ package com.secondhand.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.secondhand.dto.LoginDTO;
+import com.secondhand.dto.RegisterDTO;
 import com.secondhand.entity.User;
 import com.secondhand.mapper.UserMapper;
 import com.secondhand.service.UserService;
@@ -9,6 +10,8 @@ import com.secondhand.utils.JwtUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
+
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -45,18 +48,34 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public void register(User user) {
+    public void register(RegisterDTO registerDTO) {
         Long count = userMapper.selectCount(
-                new QueryWrapper<User>().eq("username", user.getUsername())
+                new QueryWrapper<User>().eq("username", registerDTO.getUsername())
         );
         if (count > 0) {
             throw new RuntimeException("用户名已存在");
         }
+
+        User user = new User();
+        user.setUsername(registerDTO.getUsername());
+        user.setPassword(registerDTO.getPassword());
+        user.setNickname(StringUtils.hasText(registerDTO.getNickname())
+                ? registerDTO.getNickname()
+                : registerDTO.getUsername());
+        user.setPhone(registerDTO.getPhone());
+        // 角色与状态只能由服务端决定，绝不能从请求体读取
+        user.setRole(0);
+        user.setStatus(1);
+
         userMapper.insert(user);
     }
 
     @Override
     public User getUserInfo(Long userId) {
-        return userMapper.selectById(userId);
+        User user = userMapper.selectById(userId);
+        if (user != null) {
+            user.setPassword(null);
+        }
+        return user;
     }
 }

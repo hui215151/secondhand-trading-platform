@@ -12,6 +12,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/goods")
@@ -68,5 +69,14 @@ public class GoodsController {
         Long userId = (Long) request.getAttribute("userId");
         goodsService.deleteGoods(goodsId, userId);
         return Result.success();
+    }
+
+    /**
+     * 我发布的商品（含待审核、已下架、已售出）
+     */
+    @GetMapping("/mine")
+    public Result<List<Goods>> mine(HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return Result.success(goodsService.listMyGoods(userId));
     }
 }

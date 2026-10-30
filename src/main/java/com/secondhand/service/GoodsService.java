@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.secondhand.entity.Goods;
 import java.math.BigDecimal;
+import java.util.List;
 
 public interface GoodsService {
     IPage<Goods> listGoods(Page<Goods> page, String keyword, Integer categoryId, 
@@ -12,4 +13,5 @@ public interface GoodsService {
     void publishGoods(Goods goods);
     void updateGoods(Goods goods);
     void deleteGoods(Long goodsId, Long userId);
+    List<Goods> listMyGoods(Long userId);
 }

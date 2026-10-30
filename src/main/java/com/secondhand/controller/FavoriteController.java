@@ -41,4 +41,10 @@ public class FavoriteController {
         Page<Goods> pageParam = new Page<>(page, size);
         return Result.success(favoriteService.listFavorites(pageParam, userId));
     }
+
+    @GetMapping("/check/{goodsId}")
+    public Result<Boolean> check(@PathVariable Long goodsId, HttpServletRequest request) {
+        Long userId = (Long) request.getAttribute("userId");
+        return Result.success(favoriteService.isFavorite(userId, goodsId));
+    }
 }
