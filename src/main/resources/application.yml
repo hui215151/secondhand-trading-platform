@@ -24,6 +24,31 @@ spring:
     multipart:
       max-file-size: 10MB
       max-request-size: 100MB
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+    virtual-host: /
+    listener:
+      simple:
+        acknowledge-mode: manual
+        prefetch: 1
+
+# 秒杀模块配置
+seckill:
+  rate-limit:
+    qps: 1000
+  mq:
+    max-retries: 3
+    retry-ttl-ms: 5000
+
+# AI 助手配置（OpenAI 兼容接口，默认 DeepSeek，可改为通义/OpenAI 等）
+agent:
+  base-url: https://api.deepseek.com
+  api-key: 你的APIKey
+  model: deepseek-chat
+  max-rounds: 5
 
 mybatis-plus:
   mapper-locations: classpath*:/mapper/**/*.xml
